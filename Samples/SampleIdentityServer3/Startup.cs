@@ -19,9 +19,9 @@ using System.Threading.Tasks;
 using Serilog;
 using Microsoft.Owin.Security;
 using IdentityServer3.Core.Extensions;
+using IdentityServer3.Core.Services;
 
-[assembly: OwinStartupAttribute(typeof(SampleIdentityServer3.Startup))]
-
+[assembly: OwinStartup(typeof(SampleIdentityServer3.Startup))]
 namespace SampleIdentityServer3
 {
     public class Startup
@@ -42,7 +42,9 @@ namespace SampleIdentityServer3
                     Factory = new IdentityServerServiceFactory()
                         .UseInMemoryScopes(StandardScopes.All)
                         .UseInMemoryClients(Clients.Get())
-                        .UseInMemoryUsers(Users.Get()),
+                        //.UseInMemoryUsers(Users.Get())
+                        ,
+
 
                     RequireSsl = false,
 
@@ -58,11 +60,13 @@ namespace SampleIdentityServer3
                     LoggingOptions = new LoggingOptions
                     {
                         EnableKatanaLogging = true
-                    }
+                    },
                 };
 
                 options.AuthenticationOptions.IdentityProviders = ConfigureSaml2;
-
+                var mockUserService = new MockUserService();
+                options.Factory.UserService =
+                    new Registration<IUserService>(resolver => mockUserService);
                 idSrv3App.UseIdentityServer(options);
             });
 
